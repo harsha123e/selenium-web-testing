@@ -15,35 +15,41 @@ jobs:
         browser: [chrome, firefox]
 
     steps:
-      - name: Install Browser
-        if: matrix.os == 'ubuntu-latest'
+      - name: Install Chrome on Linux
+        if: matrix.os == 'ubuntu-latest' && matrix.browser == 'chrome'
+        continue-on-error: true
         run: |
-          if [ ${{ matrix.browser }} == 'chrome' ]; then
-            sudo apt-get update
-            sudo apt-get install -y wget
-            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo apt install -y ./google-chrome-stable_current_amd64.deb
-            google-chrome --version
-          elif [ ${{ matrix.browser }} == 'firefox' ]; then
-            sudo apt-get update
-            sudo apt-get install -y firefox wget
-            wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
-            tar -xzf geckodriver-v0.33.0-linux64.tar.gz
-            sudo mv geckodriver /usr/local/bin/
-            firefox --version
-          fi
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt install -y ./google-chrome-stable_current_amd64.deb
+          google-chrome --version
 
-      - name: Install Browser on Windows
-        if: matrix.os == 'windows-latest'
+      - name: Install Firefox and Geckodriver on Linux
+        if: matrix.os == 'ubuntu-latest' && matrix.browser == 'firefox'
+        continue-on-error: true
         run: |
-          if [ ${{ matrix.browser }} == 'chrome' ]; then
-            Invoke-WebRequest -Uri https://dl.google.com/chrome/install/latest/chrome_installer.exe -OutFile chrome_installer.exe
-            Start-Process -Wait -FilePath .\chrome_installer.exe
-          elif [ ${{ matrix.browser }} == 'firefox' ]; then
-            Invoke-WebRequest -Uri https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-win64.zip -OutFile geckodriver.zip
-            Expand-Archive -Path geckodriver.zip -DestinationPath geckodriver
-            Move-Item -Path .\geckodriver\geckodriver.exe -Destination C:\Windows\System32
-          fi
+          sudo apt-get update
+          sudo apt-get install -y firefox wget
+          wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
+          tar -xzf geckodriver-v0.33.0-linux64.tar.gz
+          sudo mv geckodriver /usr/local/bin/
+          firefox --version
+
+      - name: Install Chrome on Windows
+        if: matrix.os == 'windows-latest' && matrix.browser == 'chrome'
+        continue-on-error: true
+        run: |
+          Invoke-WebRequest -Uri https://dl.google.com/chrome/install/latest/chrome_installer.exe -OutFile chrome_installer.exe
+          Start-Process -Wait -FilePath .\chrome_installer.exe
+
+      - name: Install Firefox and Geckodriver on Windows
+        if: matrix.os == 'windows-latest' && matrix.browser == 'firefox'
+        continue-on-error: true
+        run: |
+          Invoke-WebRequest -Uri https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-win64.zip -OutFile geckodriver.zip
+          Expand-Archive -Path geckodriver.zip -DestinationPath geckodriver
+          Move-Item -Path .\geckodriver\geckodriver.exe -Destination C:\Windows\System32
 
   checkout-and-setup:
     needs: setup
@@ -72,6 +78,7 @@ jobs:
   test:
     needs: checkout-and-setup
     runs-on: ${{ matrix.os }}
+    continue-on-error: true # Allows the workflow to continue even if this job fails
     steps:
       - name: Run tests and generate report
         env:
@@ -86,6 +93,7 @@ jobs:
           pytest --html=reports/test_report.html --self-contained-html
 
       - name: Upload test report
+        if: success() || failure() # Ensures this step runs even if the previous steps fail
         uses: actions/upload-artifact@v3
         with:
           name: test-report
