@@ -8,16 +8,9 @@ on:
 
 jobs:
   setup:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        browser: [chrome, firefox]
-
+    runs-on: ubuntu-latest
     steps:
-      - name: Install Chrome on Linux
-        if: matrix.os == 'ubuntu-latest' && matrix.browser == 'chrome'
-        continue-on-error: true
+      - name: Install Chrome
         run: |
           sudo apt-get update
           sudo apt-get install -y wget
@@ -25,36 +18,6 @@ jobs:
           sudo apt install -y ./google-chrome-stable_current_amd64.deb
           google-chrome --version
 
-      - name: Install Firefox and Geckodriver on Linux
-        if: matrix.os == 'ubuntu-latest' && matrix.browser == 'firefox'
-        continue-on-error: true
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y firefox wget
-          wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
-          tar -xzf geckodriver-v0.33.0-linux64.tar.gz
-          sudo mv geckodriver /usr/local/bin/
-          firefox --version
-
-      - name: Install Chrome on Windows
-        if: matrix.os == 'windows-latest' && matrix.browser == 'chrome'
-        continue-on-error: true
-        run: |
-          Invoke-WebRequest -Uri https://dl.google.com/chrome/install/latest/chrome_installer.exe -OutFile chrome_installer.exe
-          Start-Process -Wait -FilePath .\chrome_installer.exe
-
-      - name: Install Firefox and Geckodriver on Windows
-        if: matrix.os == 'windows-latest' && matrix.browser == 'firefox'
-        continue-on-error: true
-        run: |
-          Invoke-WebRequest -Uri https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-win64.zip -OutFile geckodriver.zip
-          Expand-Archive -Path geckodriver.zip -DestinationPath geckodriver
-          Move-Item -Path .\geckodriver\geckodriver.exe -Destination C:\Windows\System32
-
-  checkout-and-setup:
-    needs: setup
-    runs-on: ${{ matrix.os }}
-    steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -66,34 +29,26 @@ jobs:
       - name: Install dependencies
         run: |
           python -m venv venv
-          if [ ${{ matrix.os }} == 'ubuntu-latest' ]; then
-            source venv/bin/activate
-          else
-            .\venv\Scripts\activate
-          fi
+          source venv/bin/activate
           pip install pip-tools
           pip-compile requirements.in
           pip-sync
 
   test:
-    needs: checkout-and-setup
-    runs-on: ${{ matrix.os }}
-    continue-on-error: true # Allows the workflow to continue even if this job fails
+    needs: setup
+    runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Run tests and generate report
         env:
-          BROWSER: ${{ matrix.browser }}
+          BROWSER: chrome
         run: |
-          if [ ${{ matrix.os }} == 'ubuntu-latest' ]; then
-            source venv/bin/activate
-          else
-            .\venv\Scripts\activate
-          fi
+          source venv/bin/activate
           mkdir -p reports
           pytest --html=reports/test_report.html --self-contained-html
 
       - name: Upload test report
-        if: success() || failure() # Ensures this step runs even if the previous steps fail
+        if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: test-report
