@@ -10,7 +10,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    # Define the matrix of browsers to test
     strategy:
       matrix:
         browser:
@@ -19,30 +18,65 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # Latest stable version
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4  # Latest stable version
+        uses: actions/setup-python@v3
         with:
-          python-version: '3.12'  # Set to the Python version you are using
+          python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Cache Chrome
+        id: cache-chrome
+        uses: actions/cache@v3
+        with:
+          path: |
+            /usr/local/bin/google-chrome
+            /usr/local/bin/chromedriver
+          key: ${{ runner.os }}-chrome-${{ hashFiles('**/google-chrome-stable_current_amd64.deb') }}
+          restore-keys: |
+            ${{ runner.os }}-chrome-
+
+      - name: Install Chrome
+        if: matrix.browser == 'chrome'
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install pip-tools
-          pip-compile requirements.in
-          pip-sync
+          if [ ! -f /usr/local/bin/google-chrome ]; then
+            sudo apt-get update
+            sudo apt-get install -y wget
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo apt install ./google-chrome-stable_current_amd64.deb
+          fi
+
+      - name: Cache Firefox
+        id: cache-firefox
+        uses: actions/cache@v3
+        with:
+          path: |
+            /usr/local/bin/firefox
+            /usr/local/bin/geckodriver
+          key: ${{ runner.os }}-firefox-${{ hashFiles('**/geckodriver-v0.33.0-linux64.tar.gz') }}
+          restore-keys: |
+            ${{ runner.os }}-firefox-
+
+      - name: Install Firefox and Geckodriver
+        if: matrix.browser == 'firefox'
+        run: |
+          if [ ! -f /usr/local/bin/firefox ]; then
+            sudo apt-get update
+            sudo apt-get install -y firefox wget
+            wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
+            tar -xzf geckodriver-v0.33.0-linux64.tar.gz
+            sudo mv geckodriver /usr/local/bin/
+          fi
 
       - name: Run tests and generate report
         env:
-          BROWSER: ${{ matrix.browser }}  # Use matrix variable to select browser
+          BROWSER: ${{ matrix.browser }}
         run: |
           source venv/bin/activate
           pytest --html=reports/test_report.html --self-contained-html
-          
+
       - name: Upload test report
-        uses: actions/upload-artifact@v3  # Latest stable version
+        uses: actions/upload-artifact@v3
         with:
           name: test-report
           path: reports/test_report.html
