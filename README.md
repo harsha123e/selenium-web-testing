@@ -11,27 +11,32 @@ A comprehensive Selenium WebDriver test suite for the Sauce Demo website, coveri
    - Verify logout functionality.
 
 2. **Product Interaction**
-   - Test product search functionality.
    - Test product selection and addition to the cart.
 
 3. **Shopping Cart Management**
    - Test adding multiple products to the cart.
-   - Test updating product quantities in the cart.
    - Test removing products from the cart.
 
 4. **Checkout Process**
    - Test completing a purchase with valid information.
-   - Verify order confirmation.
 
 ## Setup
 
 1. **Install Dependencies:**
    - Create a virtual environment: `python -m venv venv`
    - Activate it: `source venv/bin/activate` (or `venv\Scripts\activate` on Windows)
-   - Install requirements: `pip install -r requirements.txt`
+   - Install `pip-tools`: `pip install pip-tools`
+   - **Compile dependencies**:
+     - The `requirements.in` file lists your project's top-level dependencies.
+     - To generate a `requirements.txt` file that includes all transitive dependencies, run: `pip-compile requirements.in`
+     - This command will create or update the `requirements.txt` file.
+     - Use `pip-sync` to install the dependencies listed in `requirements.txt`: `pip-sync`
+     - `pip-sync` automatically installs and uninstalls packages based on the packages mentioned in `requirements.in`.
 
 2. **Run Tests:**
-   - Execute tests: `python -m unittest discover -s tests`
+   - Execute tests with Pytest: `pytest`
+   - Run a specific test file: `pytest tests/test_user_authentication.py`
+   - Generate an HTML report: `pytest --html=reports/test_report.html --self-contained-html`
 
 ## GitHub Actions
 
