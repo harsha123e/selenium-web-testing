@@ -8,44 +8,58 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     
     strategy:
       matrix:
-        browser:
-          - chrome
-          - firefox
+        os: [ubuntu-latest, windows-latest]  # Add other OS versions as needed
+        browser: [chrome, firefox]
 
     steps:
       - name: Install Chrome
-        if: matrix.browser == 'chrome'
+        if: matrix.os == 'ubuntu-latest' && matrix.browser == 'chrome'
         run: |
           sudo apt-get update
           sudo apt-get install -y wget
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo apt install -y ./google-chrome-stable_current_amd64.deb
+          google-chrome --version
 
       - name: Install Firefox and Geckodriver
-        if: matrix.browser == 'firefox'
+        if: matrix.os == 'ubuntu-latest' && matrix.browser == 'firefox'
         run: |
           sudo apt-get update
           sudo apt-get install -y firefox wget
           wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
           tar -xzf geckodriver-v0.33.0-linux64.tar.gz
           sudo mv geckodriver /usr/local/bin/
+          firefox --version
 
+      - name: Install Chrome on Windows
+        if: matrix.os == 'windows-latest' && matrix.browser == 'chrome'
+        run: |
+          Invoke-WebRequest -Uri https://dl.google.com/chrome/install/latest/chrome_installer.exe -OutFile chrome_installer.exe
+          Start-Process -Wait -FilePath .\chrome_installer.exe
+
+      - name: Install Firefox and Geckodriver on Windows
+        if: matrix.os == 'windows-latest' && matrix.browser == 'firefox'
+        run: |
+          Invoke-WebRequest -Uri https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-win64.zip -OutFile geckodriver.zip
+          Expand-Archive -Path geckodriver.zip -DestinationPath geckodriver
+          Move-Item -Path .\geckodriver\geckodriver.exe -Destination C:\Windows\System32
+          
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.12.3'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
           python -m venv venv
-          source venv/bin/activate
+          source venv/bin/activate  # Adjust this line based on the OS
           pip install pip-tools
           pip-compile requirements.in
           pip-sync
@@ -54,7 +68,7 @@ jobs:
         env:
           BROWSER: ${{ matrix.browser }}
         run: |
-          source venv/bin/activate
+          source venv/bin/activate  # Adjust this line based on the OS
           mkdir -p reports
           pytest --html=reports/test_report.html --self-contained-html
 
