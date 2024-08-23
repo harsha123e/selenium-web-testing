@@ -1,0 +1,48 @@
+name: Selenium Web Testing
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering from the Actions tab
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    # Define the matrix of browsers to test
+    strategy:
+      matrix:
+        browser:
+          - chrome
+          - firefox
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3  # Latest stable version
+
+      - name: Set up Python
+        uses: actions/setup-python@v4  # Latest stable version
+        with:
+          python-version: '3.12'  # Set to the Python version you are using
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install pip-tools
+          pip-compile requirements.in
+          pip-sync
+
+      - name: Run tests and generate report
+        env:
+          BROWSER: ${{ matrix.browser }}  # Use matrix variable to select browser
+        run: |
+          source venv/bin/activate
+          pytest --html=reports/test_report.html --self-contained-html
+          
+      - name: Upload test report
+        uses: actions/upload-artifact@v3  # Latest stable version
+        with:
+          name: test-report
+          path: reports/test_report.html
