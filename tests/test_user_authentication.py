@@ -3,10 +3,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from helpers.driver_manager import get_driver
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 class UserAuthenticationTests(unittest.TestCase):
     
@@ -32,8 +28,6 @@ class UserAuthenticationTests(unittest.TestCase):
         welcome_message = driver.find_element(By.CLASS_NAME, 'title').text
         self.assertEqual(welcome_message, 'Products', "Login failed or welcome message not found")
 
-        logger.info("Completed test_login_valid")
-
     def test_login_invalid(self):
         driver = self.driver
         driver.find_element(By.ID, 'user-name').send_keys('invalid_user')
@@ -43,8 +37,6 @@ class UserAuthenticationTests(unittest.TestCase):
         # Add assertions to verify login failure
         error_message = driver.find_element(By.XPATH, '//h3[@data-test="error"]').text
         self.assertIn("Epic sadface:", error_message, "Error message not found or incorrect")
-
-        logger.info("Completed test_login_invalid")
 
     def test_logout(self):
         driver = self.driver
@@ -61,8 +53,6 @@ class UserAuthenticationTests(unittest.TestCase):
         # Add assertions to verify successful logout
         login_button = driver.find_element(By.ID, 'login-button')
         self.assertTrue(login_button.is_displayed(), "Logout failed or login button not found")
-        logger.info("Completed test_logout")
-
 
 if __name__ == "__main__":
     unittest.main()

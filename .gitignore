@@ -21,6 +21,7 @@ dist/
 *.log
 
 # Test results
+reports/
 test-results/
 coverage/
 
