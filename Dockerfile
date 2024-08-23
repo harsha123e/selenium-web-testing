@@ -11,10 +11,12 @@ RUN apt-get update && \
     dpkg -i google-chrome-stable_current_amd64.deb || apt-get -f install -y && \
     rm google-chrome-stable_current_amd64.deb && \
     wget -q https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip && \
-    unzip -q chromedriver_linux64.zip && \
+    unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/local/bin/ && \
     chmod +x /usr/local/bin/chromedriver && \
-    rm chromedriver_linux64.zip
+    rm chromedriver_linux64.zip && \
+    google-chrome --version && \
+    chromedriver --version
 
 # Set up working directory
 WORKDIR /app
