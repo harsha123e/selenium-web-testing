@@ -14,34 +14,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.12'
+      - name: Build Docker image
+        run: docker build -t selenium-web-testing .
 
-      - name: Install Chrome
+      - name: Run Docker container
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt install -y ./google-chrome-stable_current_amd64.deb
-          google-chrome --version
-
-      - name: Install dependencies
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install pip-tools
-          pip-compile requirements.in
-          pip-sync
-
-      - name: Run tests and generate report
-        env:
-          BROWSER: chrome
-        run: |
-          source venv/bin/activate
-          mkdir -p reports
-          pytest --html=reports/test_report.html --self-contained-html
+          docker run --rm -v ${{ github.workspace }}:/app selenium-web-testing
 
       - name: Upload test report
         if: success() || failure()
