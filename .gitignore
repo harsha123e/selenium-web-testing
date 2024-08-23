@@ -1,0 +1,32 @@
+#.gitignore for a Python/Selenium Project
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# Test results
+test-results/
+coverage/
+
+# WebDriver binaries
+webdriver-manager/
+
+# Misc
+*.tmp
+*.swp
