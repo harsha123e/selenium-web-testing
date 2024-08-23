@@ -49,6 +49,11 @@ The Selenium Web Testing suite is designed to automate the testing of the Sauce 
 
 The test suite is integrated with GitHub Actions. Tests are automatically executed on push or manually triggered from the Actions tab.
 
+## Test Report
+
+![image](https://github.com/user-attachments/assets/e58a1212-6b9b-41ec-a190-5dd4efcad974)
+
+
 ## Test Case Steps
 
 These test cases are automated using Selenium
