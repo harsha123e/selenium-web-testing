@@ -19,7 +19,7 @@ jobs:
 
       - name: Run Docker container
         run: |
-          docker run --rm -v ${{ github.workspace }}:/app selenium-web-testing
+          docker run --rm -e CI=true -v ${{ github.workspace }}:/app selenium-web-testing
 
       - name: Upload test report
         if: success() || failure()
